@@ -49,6 +49,7 @@ def main():
     if not os.path.exists("save_weights"):
         os.makedirs("save_weights")
 
+    # 例如，图像翻转后，对应的位置信息也要进行相应调整
     data_transform = {
         "train": transforms.Compose([transforms.ToTensor(),
                                      transforms.RandomHorizontalFlip(0.5)]),
@@ -58,6 +59,7 @@ def main():
     VOC_root = "./"  # VOCdevkit
     aspect_ratio_group_factor = 3
     batch_size = 8
+    batch_size = 2
     amp = False  # 是否使用混合精度训练，需要GPU支持
 
     # check voc root
@@ -79,6 +81,7 @@ def main():
         train_batch_sampler = GroupedBatchSampler(train_sampler, group_ids, batch_size)
 
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
+    nw = 1
     print('Using %g dataloader workers' % nw)
 
     # 注意这里的collate_fn是自定义的，因为读取的数据包括image和targets，不能直接使用默认的方法合成batch

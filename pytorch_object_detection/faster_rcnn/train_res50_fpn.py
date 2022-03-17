@@ -71,6 +71,7 @@ def main(parser_data):
     # 注意这里的collate_fn是自定义的，因为读取的数据包括image和targets，不能直接使用默认的方法合成batch
     batch_size = parser_data.batch_size
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])  # number of workers
+    nw = 1
     print('Using %g dataloader workers' % nw)
     if train_sampler:
         # 如果按照图片高宽比采样图片，dataloader中需要使用batch_sampler
@@ -197,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run')
     # 训练的batch size
-    parser.add_argument('--batch_size', default=8, type=int, metavar='N',
+    parser.add_argument('--batch_size', default=1, type=int, metavar='N',
                         help='batch size when training.')
     parser.add_argument('--aspect-ratio-group-factor', default=3, type=int)
     # 是否使用混合精度训练(需要GPU支持混合精度)

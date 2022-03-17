@@ -13,7 +13,7 @@
 
 ## 文件结构：
 ```
-  ├── backbone: 特征提取网络，可以根据自己的要求选择
+  ├── backbone: 特征提取网络，可以根据自己的要求选择: mobileNetV2, ResNet50+FPN (池化金字塔结构)
   ├── network_files: Faster R-CNN网络（包括Fast R-CNN以及RPN等模块）
   ├── train_utils: 训练验证相关模块（包括cocotools）
   ├── my_dataset.py: 自定义dataset用于读取VOC数据集
@@ -26,8 +26,8 @@
 ```
 
 ## 预训练权重下载地址（下载后放入backbone文件夹中）：
-* MobileNetV2 backbone: https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
-* ResNet50+FPN backbone: https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth
+* MobileNetV2 backbone: https://download.pytorch.org/models/mobilenet_v2-b0353104.pth (only backbone)
+* ResNet50+FPN backbone: https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth (all network)
 * 注意，下载的预训练权重记得要重命名，比如在train_resnet50_fpn.py中读取的是```fasterrcnn_resnet50_fpn_coco.pth```文件，
   不是```fasterrcnn_resnet50_fpn_coco-258fb6c6.pth```
  
