@@ -4,9 +4,9 @@ from torch.cuda import amp
 import torch.nn.functional as F
 
 from build_utils.utils import *
-from .coco_eval import CocoEvaluator
 from .coco_utils import get_coco_api_from_dataset
 import train_utils.distributed_utils as utils
+from coco_eval import CocoEvaluator
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch,

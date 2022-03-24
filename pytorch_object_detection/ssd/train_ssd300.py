@@ -174,7 +174,8 @@ if __name__ == '__main__':
     # 检测的目标类别个数，不包括背景
     parser.add_argument('--num_classes', default=20, type=int, help='num_classes')
     # 训练数据集的根目录(VOCdevkit)
-    parser.add_argument('--data-path', default='./', help='dataset')
+    parser.add_argument('--data-path', default = '../faster_rcnn/', help='dataset')
+    # parser.add_argument('--data-path', default='./', help='dataset')
     # 文件保存地址
     parser.add_argument('--output-dir', default='./save_weights', help='path where to save')
     # 若需要接着上次训练，则指定上次训练保存权重文件地址
@@ -185,9 +186,10 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run')
     # 训练的batch size
-    parser.add_argument('--batch_size', default=4, type=int, metavar='N',
+    parser.add_argument('--batch_size', default=2, type=int, metavar='N',
                         help='batch size when training.')
-
+    # 是否使用混合精度训练(需要GPU支持混合精度)
+    parser.add_argument("--amp", default = False, help = "Use torch.cuda.amp for mixed precision training")
     args = parser.parse_args()
     print(args)
 
