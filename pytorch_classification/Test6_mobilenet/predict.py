@@ -38,7 +38,7 @@ def main():
     # create model
     model = MobileNetV2(num_classes=5).to(device)
     # load model weights
-    model_weight_path = "./MobileNetV2.pth"
+    model_weight_path = "mobilenet_v2.pth"
     model.load_state_dict(torch.load(model_weight_path, map_location=device))
     model.eval()
     with torch.no_grad():

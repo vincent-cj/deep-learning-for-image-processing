@@ -87,7 +87,7 @@ def main():
     optimizer = optim.Adam(params, lr=0.0001)
 
     best_acc = 0.0
-    save_path = './MobileNetV2.pth'
+    save_path = 'mobilenet_v2.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train

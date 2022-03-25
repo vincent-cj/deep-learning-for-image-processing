@@ -97,11 +97,19 @@ if __name__ == '__main__':
     validate_loader = torch.utils.data.DataLoader(validate_dataset,
                                                   batch_size=batch_size, shuffle=False,
                                                   num_workers=2)
+    # create model
     net = MobileNetV2(num_classes=5)
+
     # load pretrain weights
-    model_weight_path = "./MobileNetV2.pth"
-    assert os.path.exists(model_weight_path), "cannot find {} file".format(model_weight_path)
-    net.load_state_dict(torch.load(model_weight_path, map_location=device))
+    # download url: https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
+    model_weight_path = "./mobilenet_v2.pth"
+    assert os.path.exists(model_weight_path), "file {} dose not exist.".format(model_weight_path)
+    pre_weights = torch.load(model_weight_path, map_location=device)
+
+    # delete classifier weights
+    pre_dict = {k: v for k, v in pre_weights.items() if net.state_dict()[k].numel() == v.numel()}
+    missing_keys, unexpected_keys = net.load_state_dict(pre_dict, strict=False)
+
     net.to(device)
 
     # read class_indict
