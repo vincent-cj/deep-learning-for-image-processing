@@ -1,6 +1,8 @@
 from torch import nn
 import torch
 
+# 预训练权重 https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
+
 
 def _make_divisible(ch, divisor=8, min_ch=None):
     """
@@ -11,6 +13,7 @@ def _make_divisible(ch, divisor=8, min_ch=None):
     """
     if min_ch is None:
         min_ch = divisor
+    # 四舍五入的方式设置为8的整数倍
     new_ch = max(min_ch, int(ch + divisor / 2) // divisor * divisor)
     # Make sure that round down does not go down by more than 10%.
     if new_ch < 0.9 * ch:
@@ -73,7 +76,7 @@ class MobileNetV2(nn.Module):
             [6, 320, 1, 1],
         ]
 
-        features = []
+        features = list()
         # conv1 layer
         features.append(ConvBNReLU(3, input_channel, stride=2))
         # building inverted residual residual blockes

@@ -9,13 +9,18 @@ from torchvision import transforms, datasets
 from tqdm import tqdm
 
 from model_v2 import MobileNetV2
+from model_v3 import mobilenet_v3_small, mobilenet_v3_large
+
+
+net_names = ['mobilenet_v2', 'mobilenet_v3_large', 'mobilenet_v3_small']
+net_moduls = [MobileNetV2, mobilenet_v3_large, mobilenet_v3_small]
 
 
 def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("using {} device.".format(device))
 
-    batch_size = 16
+    batch_size = 2
     epochs = 5
 
     data_transform = {
@@ -61,18 +66,24 @@ def main():
                                                                            val_num))
 
     # create model
-    net = MobileNetV2(num_classes=5)
+    net_name = 'mobilenet_v3_small'
+    module = dict(zip(net_names, net_moduls))[net_name]
+    net = module(num_classes = 5)
+    # net = MobileNetV2(num_classes=5)
 
     # load pretrain weights
     # download url: https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
-    model_weight_path = "./mobilenet_v2.pth"
+    # mobilenet_v3_large: https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth
+    # mobilenet_v3_small: https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth
+    # model_weight_path = "./mobilenet_v2.pth"
+    model_weight_path = f"./{net_name}.pth"
     assert os.path.exists(model_weight_path), "file {} dose not exist.".format(model_weight_path)
     pre_weights = torch.load(model_weight_path, map_location=device)
 
     # delete classifier weights
     pre_dict = {k: v for k, v in pre_weights.items() if net.state_dict()[k].numel() == v.numel()}
     missing_keys, unexpected_keys = net.load_state_dict(pre_dict, strict=False)
-
+    
     # freeze features weights
     for param in net.features.parameters():
         param.requires_grad = False
@@ -87,7 +98,8 @@ def main():
     optimizer = optim.Adam(params, lr=0.0001)
 
     best_acc = 0.0
-    save_path = 'mobilenet_v2.pth'
+    # save_path = 'mobilenet_v2.pth'
+    save_path = f'{net_name}_update.pth'
     train_steps = len(train_loader)
     for epoch in range(epochs):
         # train

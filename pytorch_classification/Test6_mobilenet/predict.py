@@ -7,6 +7,11 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 
 from model_v2 import MobileNetV2
+from model_v3 import mobilenet_v3_small, mobilenet_v3_large
+
+
+net_names = ['mobilenet_v2', 'mobilenet_v3_large', 'mobilenet_v3_small']
+net_moduls = [MobileNetV2, mobilenet_v3_large, mobilenet_v3_small]
 
 
 def main():
@@ -35,11 +40,20 @@ def main():
     json_file = open(json_path, "r")
     class_indict = json.load(json_file)
 
-    # create model
-    model = MobileNetV2(num_classes=5).to(device)
-    # load model weights
-    model_weight_path = "mobilenet_v2.pth"
-    model.load_state_dict(torch.load(model_weight_path, map_location=device))
+    # create model and load model weights
+    # model = MobileNetV2(num_classes=5).to(device)
+    # model_weight_path = "mobilenet_v2.pth"
+    # model.load_state_dict(torch.load(model_weight_path, map_location=device))
+    
+    net_name = 'mobilenet_v3_small'
+    module = dict(zip(net_names, net_moduls))[net_name]
+    model = module(num_classes = 5).to(device)
+    model_weight_path = f'{net_name}_update.pth' if os.path.isfile(f'./{net_name}_update.pth') else f'{net_name}.pth'
+    pre_weights = torch.load(model_weight_path, map_location = device)
+
+    pre_dict = {k: v for k, v in pre_weights.items() if model.state_dict()[k].numel() == v.numel()}
+    missing_keys, unexpected_keys = model.load_state_dict(pre_dict, strict = False)
+    
     model.eval()
     with torch.no_grad():
         # predict class
