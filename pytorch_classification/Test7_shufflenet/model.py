@@ -3,6 +3,15 @@ from typing import List, Callable
 import torch
 from torch import Tensor
 import torch.nn as nn
+import torchvision.models.shufflenetv2
+
+
+model_urls = {
+    'shufflenetv2_x0.5': 'https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth',
+    'shufflenetv2_x1.0': 'https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth',
+    'shufflenetv2_x1.5': None,
+    'shufflenetv2_x2.0': None,
+}
 
 
 def channel_shuffle(x: Tensor, groups: int) -> Tensor:
@@ -32,7 +41,8 @@ class InvertedResidual(nn.Module):
 
         assert output_c % 2 == 0
         branch_features = output_c // 2
-        # 当stride为1时，input_channel应该是branch_features的两倍
+        # 当stride为1时，input_channel应该是branch_features的两倍，即block的输入输出通道数相等
+        # 当stride为2时，input_channel = output_channel
         # python中 '<<' 是位运算，可理解为计算×2的快速方法
         assert (self.stride != 1) or (input_c == branch_features << 1)
 

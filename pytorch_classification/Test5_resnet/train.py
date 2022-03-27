@@ -7,7 +7,7 @@ import torch.optim as optim
 from torchvision import transforms, datasets
 from tqdm import tqdm
 
-from model import resnet34
+from model import resnet34, resnet50, resnext50_32x4d
 
 
 def main():
@@ -57,10 +57,12 @@ def main():
     print("using {} images for training, {} images for validation.".format(train_num,
                                                                            val_num))
     
-    net = resnet34()
-    # load pretrain weights
-    # download url: https://download.pytorch.org/models/resnet34-333f7ec4.pth
-    model_weight_path = "./resnet34-pre.pth"
+    # net = resnet50()
+    # model_weight_path = "./resnet50-pre.pth"
+    
+    net = resnext50_32x4d()
+    model_weight_path = "./resnext50_32x4d.pth"
+    
     assert os.path.exists(model_weight_path), "file {} does not exist.".format(model_weight_path)
     net.load_state_dict(torch.load(model_weight_path, map_location=device))
     # for param in net.parameters():

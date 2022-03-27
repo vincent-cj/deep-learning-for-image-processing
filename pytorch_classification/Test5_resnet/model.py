@@ -2,6 +2,19 @@ import torch.nn as nn
 import torch
 
 
+model_urls = {
+    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
+    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
+    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
+    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+    'resnext50_32x4d': 'https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth',
+    'resnext101_32x8d': 'https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth',
+    'wide_resnet50_2': 'https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth',
+    'wide_resnet101_2': 'https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth',
+}
+
+
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -113,7 +126,6 @@ class ResNet(nn.Module):
         if self.include_top:
             self.avgpool = nn.AdaptiveAvgPool2d((1, 1))  # output size = (1, 1)
             self.fc = nn.Linear(512 * block.expansion, num_classes)
-
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -125,13 +137,12 @@ class ResNet(nn.Module):
                 nn.Conv2d(self.in_channel, channel * block.expansion, kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(channel * block.expansion))
 
-        layers = []
-        layers.append(block(self.in_channel,
-                            channel,
-                            downsample=downsample,
-                            stride=stride,
-                            groups=self.groups,
-                            width_per_group=self.width_per_group))
+        layers = [block(self.in_channel,
+                        channel,
+                        downsample = downsample,
+                        stride = stride,
+                        groups = self.groups,
+                        width_per_group = self.width_per_group)]
         self.in_channel = channel * block.expansion
 
         for _ in range(1, block_num):
