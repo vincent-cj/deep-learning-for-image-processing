@@ -61,10 +61,10 @@ class PatchEmbed(nn.Module):
         assert H == self.img_size[0] and W == self.img_size[1], \
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
 
-        # flatten: [B, C, H, W] -> [B, C, HW]
-        # transpose: [B, C, HW] -> [B, HW, C]
+        # flatten: [B, C, H, W] -> [B, C, HW] 将通道数从3增加到768，将网格数从224*224降低到14×14=196
+        # transpose: [B, C, HW] -> [B, HW, C]   后续的attention在网格之间进行，交换轴变成 (b, 196, 768)
         x = self.proj(x).flatten(2).transpose(1, 2)
-        x = self.norm(x)
+        x = self.norm(x)    # 对每个像素点的所有通道768进行normalization
         return x
 
 
@@ -86,7 +86,7 @@ class Attention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop_ratio)
 
     def forward(self, x):
-        # [batch_size, num_patches + 1, total_embed_dim]
+        # [batch_size, num_patches + 1, total_embed_dim], C也对应特征图的通道数
         B, N, C = x.shape
 
         # qkv(): -> [batch_size, num_patches + 1, 3 * total_embed_dim]
