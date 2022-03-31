@@ -217,7 +217,8 @@ class WindowAttention(nn.Module):
         # get pair-wise relative position index for each token inside the window
         coords_h = torch.arange(self.window_size[0])
         coords_w = torch.arange(self.window_size[1])
-        coords = torch.stack(torch.meshgrid([coords_h, coords_w], indexing="ij"))  # [2, Mh, Mw]
+        # coords = torch.stack(torch.meshgrid([coords_h, coords_w], indexing="ij"))  # [2, Mh, Mw]
+        coords = torch.stack(torch.meshgrid([coords_h, coords_w]))  # [2, Mh, Mw]
         coords_flatten = torch.flatten(coords, 1)  # [2, Mh*Mw]
         # [2, Mh*Mw, 1] - [2, 1, Mh*Mw]
         relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :]  # [2, Mh*Mw, Mh*Mw]
@@ -447,7 +448,10 @@ class BasicLayer(nn.Module):
 
         mask_windows = window_partition(img_mask, self.window_size)  # [nW, Mh, Mw, 1]
         mask_windows = mask_windows.view(-1, self.window_size * self.window_size)  # [nW, Mh*Mw]
+        # 对每个窗口，将其中1个像素点的编号减去当前窗口所有像素点的编号
         attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)  # [nW, 1, Mh*Mw] - [nW, Mh*Mw, 1]
+        # 相同的判为同一连续区域置为0，不同的判为不同的连续区域，置为极限值以进行屏蔽
+        # 整个后两个维度代表以每个像素点为query进行相似性匹配时，window里其他像素点是否在同一区域内
         # [nW, Mh*Mw, Mh*Mw]
         attn_mask = attn_mask.masked_fill(attn_mask != 0, float(-100.0)).masked_fill(attn_mask == 0, float(0.0))
         return attn_mask
@@ -570,7 +574,8 @@ def swin_tiny_patch4_window7_224(num_classes: int = 1000, **kwargs):
     model = SwinTransformer(in_chans=3,
                             patch_size=4,
                             window_size=7,
-                            embed_dim=96,
+                            # embed_dim=96,
+                            embed_dim = 48,
                             depths=(2, 2, 6, 2),
                             num_heads=(3, 6, 12, 24),
                             num_classes=num_classes,

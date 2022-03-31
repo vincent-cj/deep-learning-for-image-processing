@@ -119,8 +119,10 @@ if __name__ == '__main__':
                         default="../../data_set/flower_data/flower_photos")
 
     # 预训练权重路径，如果不想载入就设置为空字符
-    parser.add_argument('--weights', type=str, default='./swin_tiny_patch4_window7_224.pth',
-                        help='initial weights path')
+    # parser.add_argument('--weights', type=str, default='./swin_tiny_patch4_window7_224.pth',
+    #                     help='initial weights path')
+    parser.add_argument('--weights', type = str, default = '',
+                        help = 'initial weights path')
     # 是否冻结权重
     parser.add_argument('--freeze-layers', type=bool, default=False)
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
