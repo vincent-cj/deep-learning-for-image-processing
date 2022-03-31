@@ -22,6 +22,7 @@ def main(args):
     train_images_path, train_images_label, val_images_path, val_images_label = read_split_data(args.data_path)
 
     img_size = 224
+    # img_size = 238
     data_transform = {
         "train": transforms.Compose([transforms.RandomResizedCrop(img_size),
                                      transforms.RandomHorizontalFlip(),
@@ -109,13 +110,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_classes', type=int, default=5)
     parser.add_argument('--epochs', type=int, default=10)
-    parser.add_argument('--batch-size', type=int, default=8)
+    parser.add_argument('--batch-size', type=int, default=4)
     parser.add_argument('--lr', type=float, default=0.0001)
 
     # 数据集所在根目录
     # http://download.tensorflow.org/example_images/flower_photos.tgz
     parser.add_argument('--data-path', type=str,
-                        default="/data/flower_photos")
+                        default="../../data_set/flower_data/flower_photos")
 
     # 预训练权重路径，如果不想载入就设置为空字符
     parser.add_argument('--weights', type=str, default='./swin_tiny_patch4_window7_224.pth',
