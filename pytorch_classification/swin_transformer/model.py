@@ -211,6 +211,7 @@ class WindowAttention(nn.Module):
         self.scale = head_dim ** -0.5
 
         # define a parameter table of relative position bias
+        # 每个head的值都不一样，但 batch_size 和 num_heads 这两个维度是一样的
         self.relative_position_bias_table = nn.Parameter(
             torch.zeros((2 * window_size[0] - 1) * (2 * window_size[1] - 1), num_heads))  # [2*Mh-1 * 2*Mw-1, nH]
 
@@ -226,7 +227,8 @@ class WindowAttention(nn.Module):
         relative_coords[:, :, 0] += self.window_size[0] - 1  # shift to start from 0
         relative_coords[:, :, 1] += self.window_size[1] - 1
         relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
-        relative_position_index = relative_coords.sum(-1)  # [Mh*Mw, Mh*Mw]
+        # [Mh*Mw, Mh*Mw] 计算出的以每个网格为query，其他网格与自己的相对位置关系（索引）
+        relative_position_index = relative_coords.sum(-1)
         self.register_buffer("relative_position_index", relative_position_index)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
@@ -261,7 +263,7 @@ class WindowAttention(nn.Module):
         relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)].view(
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # [nH, Mh*Mw, Mh*Mw]
-        attn = attn + relative_position_bias.unsqueeze(0)
+        attn = attn + relative_position_bias.unsqueeze(0)   # 每个head
 
         if mask is not None:
             # mask: [nW, Mh*Mw, Mh*Mw]
