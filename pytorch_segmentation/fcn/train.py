@@ -91,6 +91,7 @@ def main(args):
                                   txt_name="val.txt")
 
     num_workers = min([os.cpu_count(), batch_size if batch_size > 1 else 0, 8])
+    num_workers = 0
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=batch_size,
                                                num_workers=num_workers,
@@ -104,7 +105,7 @@ def main(args):
                                              pin_memory=True,
                                              collate_fn=val_dataset.collate_fn)
 
-    model = create_model(aux=args.aux, num_classes=num_classes)
+    model = create_model(aux=args.aux, num_classes=num_classes, pretrain = False)
     model.to(device)
 
     params_to_optimize = [
@@ -169,8 +170,8 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description="pytorch fcn training")
 
-    parser.add_argument("--data-path", default="/data/", help="VOCdevkit root")
-    parser.add_argument("--num-classes", default=20, type=int)
+    parser.add_argument("--data-path", default="../../data_set/", help="VOCdevkit root")
+    parser.add_argument("--num-classes", default=20, type=int, help = 'not including the background')
     parser.add_argument("--aux", default=True, type=bool, help="auxilier loss")
     parser.add_argument("--device", default="cuda", help="training device")
     parser.add_argument("-b", "--batch-size", default=4, type=int)
