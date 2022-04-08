@@ -30,10 +30,10 @@ class DriveDataset(Dataset):
     def __getitem__(self, idx):
         img = Image.open(self.img_list[idx]).convert('RGB')
         manual = Image.open(self.manual[idx]).convert('L')
-        manual = np.array(manual) / 255
+        manual = np.array(manual) / 255         # 前景为1,背景为0
         roi_mask = Image.open(self.roi_mask[idx]).convert('L')
-        roi_mask = 255 - np.array(roi_mask)
-        mask = np.clip(manual + roi_mask, a_min=0, a_max=255)
+        roi_mask = 255 - np.array(roi_mask)     # 需要的区域(包括前景和背景)为0,不需要的为255
+        mask = np.clip(manual + roi_mask, a_min=0, a_max=255)   # 前景为1,背景为0,不需要的区域为255
 
         # 这里转回PIL的原因是，transforms中是对PIL数据进行处理
         mask = Image.fromarray(mask)

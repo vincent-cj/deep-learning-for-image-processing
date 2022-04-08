@@ -29,9 +29,11 @@ class Down(nn.Sequential):
 class Up(nn.Module):
     def __init__(self, in_channels, out_channels, bilinear=True):
         super(Up, self).__init__()
+        # 如果是双线性插值，在双卷积过程中将通道数减半，插值时保持通道不变
         if bilinear:
             self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
+        # 如果是上采样，采样过程通道数减半，双卷积过程通道数不变
         else:
             self.up = nn.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)

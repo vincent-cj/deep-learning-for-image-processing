@@ -113,7 +113,7 @@ class InvertedResidual(nn.Module):
                                            norm_layer=norm_layer,
                                            activation_layer=activation_layer))
 
-        # depthwise
+        # depthwise，最后几个bottleneck，当使用膨胀卷积时，不进行降采样
         stride = 1 if cnf.dilation > 1 else cnf.stride
         layers.append(ConvBNActivation(cnf.expanded_c,
                                        cnf.expanded_c,
