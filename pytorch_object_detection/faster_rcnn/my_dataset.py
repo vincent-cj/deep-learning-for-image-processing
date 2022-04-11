@@ -81,12 +81,7 @@ class VOCDataSet(Dataset):
         image_id = torch.tensor([idx])
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        target = {"boxes": boxes, "labels": labels, "image_id": image_id, "area": area, "iscrowd": iscrowd}
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
@@ -167,12 +162,7 @@ class VOCDataSet(Dataset):
         image_id = torch.tensor([idx])
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        target = {"boxes": boxes, "labels": labels, "image_id": image_id, "area": area, "iscrowd": iscrowd}
 
         return (data_height, data_width), target
 
@@ -180,42 +170,45 @@ class VOCDataSet(Dataset):
     def collate_fn(batch):
         return tuple(zip(*batch))
 
-# import transforms
-# from draw_box_utils import draw_box
-# from PIL import Image
-# import json
-# import matplotlib.pyplot as plt
-# import torchvision.transforms as ts
-# import random
-#
-# # read class_indict
-# category_index = {}
-# try:
-#     json_file = open('./pascal_voc_classes.json', 'r')
-#     class_dict = json.load(json_file)
-#     category_index = {v: k for k, v in class_dict.items()}
-# except Exception as e:
-#     print(e)
-#     exit(-1)
-#
-# data_transform = {
-#     "train": transforms.Compose([transforms.ToTensor(),
-#                                  transforms.RandomHorizontalFlip(0.5)]),
-#     "val": transforms.Compose([transforms.ToTensor()])
-# }
-#
-# # load train data set
-# train_data_set = VOCDataSet(os.getcwd(), "2012", data_transform["train"], "train.txt")
-# print(len(train_data_set))
-# for index in random.sample(range(0, len(train_data_set)), k=5):
-#     img, target = train_data_set[index]
-#     img = ts.ToPILImage()(img)
-#     draw_box(img,
-#              target["boxes"].numpy(),
-#              target["labels"].numpy(),
-#              [1 for i in range(len(target["labels"].numpy()))],
-#              category_index,
-#              thresh=0.5,
-#              line_thickness=5)
-#     plt.imshow(img)
-#     plt.show()
+
+if __name__ == '__main__':
+
+    import transforms
+    from draw_box_utils import draw_box
+    from PIL import Image
+    import json
+    import matplotlib.pyplot as plt
+    import torchvision.transforms as ts
+    import random
+
+    # read class_indict
+    category_index = {}
+    try:
+        json_file = open('./pascal_voc_classes.json', 'r')
+        class_dict = json.load(json_file)
+        category_index = {v: k for k, v in class_dict.items()}
+    except Exception as e:
+        print(e)
+        exit(-1)
+
+    data_transform = {
+        "train": transforms.Compose([transforms.ToTensor(),
+                                     transforms.RandomHorizontalFlip(0.5)]),
+        "val": transforms.Compose([transforms.ToTensor()])
+    }
+
+    # load train data set
+    train_data_set = VOCDataSet("../../data_set", "2012", data_transform["train"], "train.txt")
+    print(len(train_data_set))
+    for index in random.sample(range(0, len(train_data_set)), k=5):
+        img, target = train_data_set[index]
+        img = ts.ToPILImage()(img)
+        draw_box(img,
+                 target["boxes"].numpy(),
+                 target["labels"].numpy(),
+                 [1 for i in range(len(target["labels"].numpy()))],
+                 category_index,
+                 thresh=0.5,
+                 line_thickness=5)
+        plt.imshow(img)
+        plt.show()
