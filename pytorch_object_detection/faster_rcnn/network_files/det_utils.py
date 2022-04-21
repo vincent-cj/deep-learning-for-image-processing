@@ -248,12 +248,14 @@ class BoxCoder(object):
         # self.bbox_xform_clip=math.log(1000. / 16)   4.135
         dw = torch.clamp(dw, max=self.bbox_xform_clip)
         dh = torch.clamp(dh, max=self.bbox_xform_clip)
-
+        
+        # 计算检测框回顾参数用的是 (x_c, y_c, h, w)
         pred_ctr_x = dx * widths[:, None] + ctr_x[:, None]
         pred_ctr_y = dy * heights[:, None] + ctr_y[:, None]
         pred_w = torch.exp(dw) * widths[:, None]
         pred_h = torch.exp(dh) * heights[:, None]
-
+        
+        # 后续在使用proposals时采用的则是 (x_min, y_min, x_max, y_max), 因此需要还原
         # xmin
         pred_boxes1 = pred_ctr_x - torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
         # ymin

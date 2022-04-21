@@ -50,10 +50,14 @@ class AnchorsGenerator(nn.Module):
 
     def __init__(self, sizes=(128, 256, 512), aspect_ratios=(0.5, 1.0, 2.0)):
         super(AnchorsGenerator, self).__init__()
-
+        
+        # sizes和aspect_ratios必须是个序列，序列的长度都等于特征层的个数
+        # 序列的每个元素为对应特征层的anchor尺寸和比例，可以有一个或多个尺寸或比例
+        # 如果sizes的元素不是序列，那么默认外层序列指的是每个特征层的anchor尺寸，将每个特征层的anchor尺寸改为只有1个元素的元组
         if not isinstance(sizes[0], (list, tuple)):
             # TODO change this
             sizes = tuple((s,) for s in sizes)
+        # 如果aspect_ratios的元素不是序列，那么默认外层序列指的是一个特征层的不同比例，将其复制使得所有特征层的比例一样
         if not isinstance(aspect_ratios[0], (list, tuple)):
             aspect_ratios = (aspect_ratios,) * len(sizes)
 
@@ -156,10 +160,10 @@ class AnchorsGenerator(nn.Module):
             # For every (base anchor, output anchor) pair,
             # offset each zero-centered base anchor by the center of the output anchor.
             # 将anchors模板与原图上的坐标偏移量相加得到原图上所有anchors的坐标信息(shape不同时会使用广播机制)
-            shifts_anchor = shifts.view(-1, 1, 4) + base_anchors.view(1, -1, 4)
-            anchors.append(shifts_anchor.reshape(-1, 4))
+            shifts_anchor = shifts.view(-1, 1, 4) + base_anchors.view(1, -1, 4)     # (h*w, num_anchors, 4)
+            anchors.append(shifts_anchor.reshape(-1, 4))    # (h*w*num_anchors, 4)
 
-        return anchors  # List[Tensor(all_num_anchors, 4)]
+        return anchors  # List[Tensor((h*w*num_anchors, 4), 4)]
 
     def cached_grid_anchors(self, grid_sizes, strides):
         # type: (List[List[int]], List[List[Tensor]]) -> List[Tensor]
@@ -193,6 +197,7 @@ class AnchorsGenerator(nn.Module):
 
         # 计算/读取所有anchors的坐标信息（这里的anchors信息是映射到原图上的所有anchors信息，不是anchors模板）
         # 得到的是一个list列表，对应每张预测特征图映射回原图的anchors坐标信息
+        # (l, h*w*num_anchors, 4)
         anchors_over_all_feature_maps = self.cached_grid_anchors(grid_sizes, strides)
 
         anchors = torch.jit.annotate(List[List[torch.Tensor]], [])
@@ -204,7 +209,7 @@ class AnchorsGenerator(nn.Module):
                 anchors_in_image.append(anchors_per_feature_map)
             anchors.append(anchors_in_image)
         # 将每一张图像的所有预测特征层的anchors坐标信息拼接在一起
-        # anchors是个list，每个元素为一张图像的所有anchors信息
+        # anchors是个list，每个元素为一张图像的所有anchors信息  (b, l, h*w*num_anchors, 4) -> (b, l*h*w*num_anchors, 4)
         anchors = [torch.cat(anchors_per_image) for anchors_per_image in anchors]
         # Clear the cache in case that memory leaks.
         self._cache.clear()
@@ -525,7 +530,7 @@ class RegionProposalNetwork(torch.nn.Module):
             keep = torch.where(torch.ge(scores, self.score_thresh))[0]  # ge: >=
             boxes, scores, lvl = boxes[keep], scores[keep], lvl[keep]
 
-            # non-maximum suppression, independently done per level
+            # non-maximum suppression, independently done per level, lvl是为了将不同层的proposals区分别，以便批量进行nms处理
             keep = box_ops.batched_nms(boxes, scores, lvl, self.nms_thresh)
 
             # keep only topk scoring predictions
@@ -610,7 +615,7 @@ class RegionProposalNetwork(torch.nn.Module):
         # objectness和pred_bbox_deltas都是list
         objectness, pred_bbox_deltas = self.head(features)
 
-        # 生成一个batch图像的所有anchors信息,list(tensor)元素个数等于batch_size
+        # 生成一个batch图像的所有anchors信息,list(tensor)元素个数等于batch_size, shape = (b, l*h*w*num_anchors, 4)
         anchors = self.anchor_generator(images, features)
 
         # batch_size
@@ -628,9 +633,9 @@ class RegionProposalNetwork(torch.nn.Module):
                                                                     pred_bbox_deltas)
 
         # apply pred_bbox_deltas to anchors to obtain the decoded proposals
-        # note that we detach the deltas because Faster R-CNN do not backprop through
-        # the proposals
+        # note that we detach the deltas because Faster R-CNN do not backprop through the proposals
         # 将预测的bbox regression参数应用到anchors上得到最终预测bbox坐标
+        # 将回归参数和anchor合并生成的proposals，不参与损失计算，因此从梯度图中剔除
         proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
 

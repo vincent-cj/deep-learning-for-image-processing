@@ -294,6 +294,8 @@ class FasterRCNN(FasterRCNNBase):
             )
 
         # 生成RPN通过滑动窗口预测网络部分
+        # 单个特征层时，每个特征点生成多个尺度、多个比例的anchor
+        # 多个特征层时，特征层的每个点生成1个尺度、多个比例的anchor，所有特征层的anchor数量一样
         if rpn_head is None:
             rpn_head = RPNHead(
                 out_channels, rpn_anchor_generator.num_anchors_per_location()[0]

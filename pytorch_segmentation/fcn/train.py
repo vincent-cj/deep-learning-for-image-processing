@@ -170,11 +170,11 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description="pytorch fcn training")
 
-    parser.add_argument("--data-path", default="../../data_set/", help="VOCdevkit root")
+    parser.add_argument("--data-path", default="../../data/", help="VOCdevkit root")
     parser.add_argument("--num-classes", default=20, type=int, help = 'not including the background')
     parser.add_argument("--aux", default=True, type=bool, help="auxilier loss")
     parser.add_argument("--device", default="cuda", help="training device")
-    parser.add_argument("-b", "--batch-size", default=4, type=int)
+    parser.add_argument("-b", "--batch-size", default=2, type=int)
     parser.add_argument("--epochs", default=30, type=int, metavar="N",
                         help="number of total epochs to train")
 
