@@ -198,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run')
     # 训练的batch size
-    parser.add_argument('--batch_size', default=1, type=int, metavar='N',
+    parser.add_argument('--batch_size', default=2, type=int, metavar='N',
                         help='batch size when training.')
     parser.add_argument('--aspect-ratio-group-factor', default=3, type=int)
     # 是否使用混合精度训练(需要GPU支持混合精度)

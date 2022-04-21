@@ -76,6 +76,8 @@ class AnchorsGenerator(nn.Module):
         """
         scales = torch.as_tensor(scales, dtype=dtype, device=device)
         aspect_ratios = torch.as_tensor(aspect_ratios, dtype=dtype, device=device)
+
+        # h/w = r & h*w=1 -> h*(h/r)=1 -> h^2 = r -> h = sqrt(r)  即在保证高宽比的同事保证不同比例下的选择框面积相等
         h_ratios = torch.sqrt(aspect_ratios)
         w_ratios = 1.0 / h_ratios
 
@@ -100,6 +102,7 @@ class AnchorsGenerator(nn.Module):
             if cell_anchors[0].device == device:
                 return
 
+        # 外层遍历是为每个特征层分别生成各自尺寸和比例的anchor
         # 根据提供的sizes和aspect_ratios生成anchors模板
         # anchors模板都是以(0, 0)为中心的anchor
         cell_anchors = [
@@ -478,12 +481,12 @@ class RegionProposalNetwork(torch.nn.Module):
         num_images = proposals.shape[0]
         device = proposals.device
 
-        # do not backprop throught objectness
+        # do not backprop throught objectness, 对proposals的过滤不影响loss的计算，因此过滤过程不能对梯度计算造成影响
         objectness = objectness.detach()
         objectness = objectness.reshape(num_images, -1)
 
         # Returns a tensor of size size filled with fill_value
-        # levels负责记录分隔不同预测特征层上的anchors索引信息
+        # levels负责记录分隔不同预测特征层上的anchors索引信息，每个张量的大小与对应特征层的anchors数目相同，数值为特征层编号
         levels = [torch.full((n, ), idx, dtype=torch.int64, device=device)
                   for idx, n in enumerate(num_anchors_per_level)]
         levels = torch.cat(levels, 0)
@@ -615,6 +618,8 @@ class RegionProposalNetwork(torch.nn.Module):
 
         # numel() Returns the total number of elements in the input tensor.
         # 计算每个预测特征层上的对应的anchors数量
+        # from functools import reduce
+        # num_anchors_per_level = [reduce(lambda x, y: x*y, o[0].shape) for o in objectness]
         num_anchors_per_level_shape_tensors = [o[0].shape for o in objectness]
         num_anchors_per_level = [s[0] * s[1] * s[2] for s in num_anchors_per_level_shape_tensors]
 

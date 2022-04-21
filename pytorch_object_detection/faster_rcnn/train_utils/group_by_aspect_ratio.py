@@ -196,6 +196,7 @@ def create_aspect_ratio_groups(dataset, k=0):
     # 统计每个区间的频次
     counts = np.unique(groups, return_counts=True)[1]
     fbins = [0] + bins + [np.inf]
+    # groups = pd.cut(aspect_ratios, fbins)
     print("Using {} as bins for aspect ratio quantization".format(fbins))
     print("Count of instances per bin: {}".format(counts))
     return groups

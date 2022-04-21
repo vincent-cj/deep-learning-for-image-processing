@@ -147,7 +147,7 @@ class GeneralizedRCNNTransform(nn.Module):
 
     def max_by_axis(self, the_list):
         # type: (List[List[int]]) -> List[int]
-        maxes = the_list[0]
+        maxes = the_list[0]     # torch.tensor(the_list).max(0)
         for sublist in the_list[1:]:
             for index, item in enumerate(sublist):
                 maxes[index] = max(maxes[index], item)
