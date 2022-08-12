@@ -1,3 +1,4 @@
+import numpy as np
 from torch.utils.data import Dataset
 import os
 import torch
@@ -11,7 +12,11 @@ class VOCDataSet(Dataset):
 
     def __init__(self, voc_root, year="2012", transforms=None, txt_name: str = "train.txt"):
         assert year in ["2007", "2012"], "year must be in ['2007', '2012']"
-        self.root = os.path.join(voc_root, "VOCdevkit", f"VOC{year}")
+        # 增加容错能力
+        if "VOCdevkit" in voc_root:
+            self.root = os.path.join(voc_root, f"VOC{year}")
+        else:
+            self.root = os.path.join(voc_root, "VOCdevkit", f"VOC{year}")
         self.img_root = os.path.join(self.root, "JPEGImages")
         self.annotations_root = os.path.join(self.root, "Annotations")
 
@@ -20,20 +25,34 @@ class VOCDataSet(Dataset):
         assert os.path.exists(txt_path), "not found {} file.".format(txt_name)
 
         with open(txt_path) as read:
-            self.xml_list = [os.path.join(self.annotations_root, line.strip() + ".xml")
-                             for line in read.readlines() if len(line.strip()) > 0]
+            xml_list = [os.path.join(self.annotations_root, line.strip() + ".xml")
+                        for line in read.readlines() if len(line.strip()) > 0]
 
+        self.xml_list = []
         # check file
+        for xml_path in xml_list:
+            if os.path.exists(xml_path) is False:
+                print(f"Warning: not found '{xml_path}', skip this annotation file.")
+                continue
+
+            # check for targets
+            with open(xml_path) as fid:
+                xml_str = fid.read()
+            xml = etree.fromstring(xml_str)
+            data = self.parse_xml_to_dict(xml)["annotation"]
+            if "object" not in data:
+                print(f"INFO: no objects in {xml_path}, skip this annotation file.")
+                continue
+
+            self.xml_list.append(xml_path)
+
         assert len(self.xml_list) > 0, "in '{}' file does not find any information.".format(txt_path)
-        for xml_path in self.xml_list:
-            assert os.path.exists(xml_path), "not found '{}' file.".format(xml_path)
 
         # read class_indict
         json_file = './pascal_voc_classes.json'
         assert os.path.exists(json_file), "{} file not exist.".format(json_file)
-        json_file = open(json_file, 'r')
-        self.class_dict = json.load(json_file)
-        json_file.close()
+        with open(json_file, 'r') as f:
+            self.class_dict = json.load(f)
 
         self.transforms = transforms
 
@@ -81,7 +100,12 @@ class VOCDataSet(Dataset):
         image_id = torch.tensor([idx])
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
 
-        target = {"boxes": boxes, "labels": labels, "image_id": image_id, "area": area, "iscrowd": iscrowd}
+        target = {}
+        target["boxes"] = boxes
+        target["labels"] = labels
+        target["image_id"] = image_id
+        target["area"] = area
+        target["iscrowd"] = iscrowd
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
@@ -162,7 +186,12 @@ class VOCDataSet(Dataset):
         image_id = torch.tensor([idx])
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
 
-        target = {"boxes": boxes, "labels": labels, "image_id": image_id, "area": area, "iscrowd": iscrowd}
+        target = {}
+        target["boxes"] = boxes
+        target["labels"] = labels
+        target["image_id"] = image_id
+        target["area"] = area
+        target["iscrowd"] = iscrowd
 
         return (data_height, data_width), target
 
@@ -170,45 +199,44 @@ class VOCDataSet(Dataset):
     def collate_fn(batch):
         return tuple(zip(*batch))
 
-
-if __name__ == '__main__':
-
-    import transforms
-    from draw_box_utils import draw_box
-    from PIL import Image
-    import json
-    import matplotlib.pyplot as plt
-    import torchvision.transforms as ts
-    import random
-
-    # read class_indict
-    category_index = {}
-    try:
-        json_file = open('./pascal_voc_classes.json', 'r')
-        class_dict = json.load(json_file)
-        category_index = {v: k for k, v in class_dict.items()}
-    except Exception as e:
-        print(e)
-        exit(-1)
-
-    data_transform = {
-        "train": transforms.Compose([transforms.ToTensor(),
-                                     transforms.RandomHorizontalFlip(0.5)]),
-        "val": transforms.Compose([transforms.ToTensor()])
-    }
-
-    # load train data set
-    train_data_set = VOCDataSet("../../data_set", "2012", data_transform["train"], "train.txt")
-    print(len(train_data_set))
-    for index in random.sample(range(0, len(train_data_set)), k=5):
-        img, target = train_data_set[index]
-        img = ts.ToPILImage()(img)
-        draw_box(img,
-                 target["boxes"].numpy(),
-                 target["labels"].numpy(),
-                 [1 for i in range(len(target["labels"].numpy()))],
-                 category_index,
-                 thresh=0.5,
-                 line_thickness=5)
-        plt.imshow(img)
-        plt.show()
+# import transforms
+# from draw_box_utils import draw_objs
+# from PIL import Image
+# import json
+# import matplotlib.pyplot as plt
+# import torchvision.transforms as ts
+# import random
+#
+# # read class_indict
+# category_index = {}
+# try:
+#     json_file = open('./pascal_voc_classes.json', 'r')
+#     class_dict = json.load(json_file)
+#     category_index = {str(v): str(k) for k, v in class_dict.items()}
+# except Exception as e:
+#     print(e)
+#     exit(-1)
+#
+# data_transform = {
+#     "train": transforms.Compose([transforms.ToTensor(),
+#                                  transforms.RandomHorizontalFlip(0.5)]),
+#     "val": transforms.Compose([transforms.ToTensor()])
+# }
+#
+# # load train data set
+# train_data_set = VOCDataSet(os.getcwd(), "2012", data_transform["train"], "train.txt")
+# print(len(train_data_set))
+# for index in random.sample(range(0, len(train_data_set)), k=5):
+#     img, target = train_data_set[index]
+#     img = ts.ToPILImage()(img)
+#     plot_img = draw_objs(img,
+#                          target["boxes"].numpy(),
+#                          target["labels"].numpy(),
+#                          np.ones(target["labels"].shape[0]),
+#                          category_index=category_index,
+#                          box_thresh=0.5,
+#                          line_thickness=3,
+#                          font='arial.ttf',
+#                          font_size=20)
+#     plt.imshow(plot_img)
+#     plt.show()

@@ -5,7 +5,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from torchvision import models
 from torchvision import transforms
-from utils import GradCAM, show_cam_on_image
+from utils import GradCAM, show_cam_on_image, center_crop_img
 
 
 def main():
@@ -31,10 +31,12 @@ def main():
     assert os.path.exists(img_path), "file: '{}' dose not exist.".format(img_path)
     img = Image.open(img_path).convert('RGB')
     img = np.array(img, dtype=np.uint8)
+    # img = center_crop_img(img, 224)
 
-    # [N, C, H, W]
+    # [C, H, W]
     img_tensor = data_transform(img)
     # expand batch dimension
+    # [C, H, W] -> [N, C, H, W]
     input_tensor = torch.unsqueeze(img_tensor, dim=0)
 
     cam = GradCAM(model=model, target_layers=target_layers, use_cuda=False)

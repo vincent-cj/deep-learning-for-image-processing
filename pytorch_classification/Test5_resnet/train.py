@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 
 import torch
@@ -64,7 +65,7 @@ def main():
     model_weight_path = "./resnext50_32x4d.pth"
     
     assert os.path.exists(model_weight_path), "file {} does not exist.".format(model_weight_path)
-    net.load_state_dict(torch.load(model_weight_path, map_location=device))
+    net.load_state_dict(torch.load(model_weight_path, map_location='cpu'))
     # for param in net.parameters():
     #     param.requires_grad = False
 
