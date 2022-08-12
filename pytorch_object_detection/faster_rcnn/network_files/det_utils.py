@@ -89,7 +89,7 @@ def encode_boxes(reference_boxes, proposals, weights):
     # type: (torch.Tensor, torch.Tensor, torch.Tensor) -> torch.Tensor
     """
     Encode a set of proposals with respect to some
-    reference boxes
+    reference boxes 根据GT的左上、右下坐标，和anchor的宽高、中心点坐标，计算目标回归参数
 
     Arguments:
         reference_boxes (Tensor): reference boxes(gt)
@@ -153,12 +153,12 @@ class BoxCoder(object):
         self.weights = weights
         self.bbox_xform_clip = bbox_xform_clip
 
-    def encode(self, reference_boxes, proposals):
+    def encode(self, gt_boxes, proposals):
         # type: (List[Tensor], List[Tensor]) -> List[Tensor]
         """
         结合anchors和与之对应的gt计算regression参数
         Args:
-            reference_boxes: List[Tensor] 每个proposal/anchor对应的gt_boxes
+            gt_boxes: List[Tensor] 每个proposal/anchor对应的gt_boxes
             proposals: List[Tensor] anchors/proposals
 
         Returns: regression parameters
@@ -166,12 +166,12 @@ class BoxCoder(object):
         """
         # 统计每张图像的anchors个数，方便后面拼接在一起处理后在分开
         # reference_boxes和proposal数据结构相同
-        boxes_per_image = [len(b) for b in reference_boxes]
-        reference_boxes = torch.cat(reference_boxes, dim=0)
+        boxes_per_image = [len(b) for b in gt_boxes]
+        gt_boxes = torch.cat(gt_boxes, dim=0)
         proposals = torch.cat(proposals, dim=0)
 
         # targets_dx, targets_dy, targets_dw, targets_dh
-        targets = self.encode_single(reference_boxes, proposals)
+        targets = self.encode_single(gt_boxes, proposals)
         return targets.split(boxes_per_image, 0)
 
     def encode_single(self, reference_boxes, proposals):
@@ -224,7 +224,7 @@ class BoxCoder(object):
     def decode_single(self, regression_params, boxes):
         """
         From a set of original boxes and encoded relative box offsets,
-        get the decoded boxes.
+        get the decoded boxes. 通过位置回归参数和anchor宽高、中心点坐标，计算预测框的左上、右下角坐标
 
         Arguments:
             regression_params (Tensor): encoded boxes (bbox regression parameters)
@@ -372,6 +372,7 @@ class Matcher(object):
         # gt_pred_pairs_of_highest_quality = torch.nonzero(
         #     match_quality_matrix == highest_quality_foreach_gt[:, None]
         # )
+        # 两个元素，第一个元素为所有为True元素所在的行，第二个元素为所有为True的元素所在的列
         gt_pred_pairs_of_highest_quality = torch.where(
             torch.eq(match_quality_matrix, highest_quality_foreach_gt[:, None])
         )
@@ -395,7 +396,7 @@ class Matcher(object):
         # 保留该anchor匹配gt最大iou的索引，即使iou低于设定的阈值
         matches[pre_inds_to_update] = all_matches[pre_inds_to_update]
         # 需要的是每个gt boxes寻找与其iou最大的anchor，而all_matcher存储的是对每个anchor寻找到的与其iou最大的gt boxes,两者不一定对等.
-        # 比如第n个anchor与i的iou最大，但是第j个gt并没有iou值大于0.7的anchor，其对应的产生最大iou的anchor恰好包含n
+        # 比如第n个anchor与第i个gt的iou最大，但是第j个gt并没有iou值大于0.7的anchor，其对应的产生最大iou的anchor恰好包含n
         # 那么按照上面分赋值方式，第n个anchor指向的仍然是i，而非j
         # matches[pre_inds_to_update] = gt_pred_pairs_of_highest_quality[0]
 

@@ -166,8 +166,8 @@ def box_iou(boxes1, boxes2):
         iou (Tensor[N, M]): the NxM matrix containing the pairwise
             IoU values for every element in boxes1 and boxes2
     """
-    area1 = box_area(boxes1)
-    area2 = box_area(boxes2)
+    area1 = box_area(boxes1)    # [N,]
+    area2 = box_area(boxes2)    # [M,]
 
     #  When the shapes do not match,
     #  the shape of the returned output tensor follows the broadcasting rules
@@ -177,6 +177,6 @@ def box_iou(boxes1, boxes2):
     wh = (rb - lt).clamp(min=0)  # [N,M,2]
     inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
 
-    iou = inter / (area1[:, None] + area2 - inter)
-    return iou
+    iou = inter / (area1[:, None] + area2 - inter)       # [N,M]
+    return iou       # [N,M]
 

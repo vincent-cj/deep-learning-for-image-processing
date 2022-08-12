@@ -416,7 +416,7 @@ class RegionProposalNetwork(torch.nn.Module):
                 # set to self.box_similarity when https://github.com/pytorch/pytorch/issues/27495 lands
                 match_quality_matrix = box_ops.box_iou(gt_boxes, anchors_per_image)
                 # 计算每个anchors与gt匹配iou最大的索引（如果iou<0.3索引置为-1，0.3<iou<0.7索引为-2）
-                matched_idxs = self.proposal_matcher(match_quality_matrix)
+                matched_idxs = self.proposal_matcher(match_quality_matrix)      # (num_anchors,)
                 # get the targets corresponding GT for each proposal
                 # NB: need to clamp the indices because we can have a single
                 # GT in the image, and matched_idxs can be -2, which goes
@@ -426,7 +426,7 @@ class RegionProposalNetwork(torch.nn.Module):
                 # 因为后面是通过labels_per_image变量来记录正样本位置的，
                 # 所以负样本和舍弃的样本对应的gt_boxes信息并没有什么意义，
                 # 反正计算目标边界框回归损失时只会用到正样本。
-                matched_gt_boxes_per_image = gt_boxes[matched_idxs.clamp(min=0)]
+                matched_gt_boxes_per_image = gt_boxes[matched_idxs.clamp(min=0)]    # (num_anchors, 4)
 
                 # 记录所有anchors匹配后的标签(正样本处标记为1，负样本处标记为0，丢弃样本处标记为-2)
                 labels_per_image = matched_idxs >= 0
@@ -439,6 +439,12 @@ class RegionProposalNetwork(torch.nn.Module):
                 # discard indices that are between thresholds
                 inds_to_discard = matched_idxs == self.proposal_matcher.BETWEEN_THRESHOLDS  # -2
                 labels_per_image[inds_to_discard] = -1.0
+
+                # 换一种方式记录labels
+                # t = matched_idxs.clone().float()
+                # t[t >= 0] = 1.
+                # t[t == self.proposal_matcher.BELOW_LOW_THRESHOLD] = 0.
+                # t[t == self.proposal_matcher.BETWEEN_THRESHOLDS] = -1.
 
             labels.append(labels_per_image)
             matched_gt_boxes.append(matched_gt_boxes_per_image)
@@ -639,7 +645,7 @@ class RegionProposalNetwork(torch.nn.Module):
         proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
 
-        # 筛除小boxes框，nms处理，根据预测概率获取前post_nms_top_n个目标
+        # 筛除小boxes框，nms处理，根据预测概率获取前post_nms_top_n个目标, 输出的结果不再区分是哪个特征层选出的box
         boxes, scores = self.filter_proposals(proposals, objectness, images.image_sizes, num_anchors_per_level)
 
         losses = {}
