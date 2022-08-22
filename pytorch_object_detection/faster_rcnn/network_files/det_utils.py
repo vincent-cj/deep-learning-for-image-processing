@@ -88,8 +88,10 @@ class BalancedPositiveNegativeSampler(object):
 def encode_boxes(reference_boxes, proposals, weights):
     # type: (torch.Tensor, torch.Tensor, torch.Tensor) -> torch.Tensor
     """
-    Encode a set of proposals with respect to some
-    reference boxes
+    Encode a set of proposals with respect to some reference boxes
+    reference_boxes: (x_gmin, y_gmin, x_gmax, y_gmax)，计算 (x_gc, y_gc, h_g, w_g)
+    proposals: (x_pmin, y_pmin, x_pmax, y_pmax)，计算 (x_pc, y_pc, h_p, w_p)
+    通过两组坐标、高度值，计算得到修正系数
 
     Arguments:
         reference_boxes (Tensor): reference boxes(gt)
@@ -225,6 +227,8 @@ class BoxCoder(object):
         """
         From a set of original boxes and encoded relative box offsets,
         get the decoded boxes.
+        现将anchors(x_min, y_min, x_max, y_max) 转为 (x_c, y_c, h, w)
+        根据回归参数转为proposals (x_pc, y_pc, h_p, w_p), 最后再转换为 (x_pmin, y_pmin, x_pmax, y_pmax)
 
         Arguments:
             regression_params (Tensor): encoded boxes (bbox regression parameters)

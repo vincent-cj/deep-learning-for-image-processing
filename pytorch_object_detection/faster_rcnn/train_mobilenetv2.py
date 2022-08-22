@@ -56,7 +56,7 @@ def main():
         "val": transforms.Compose([transforms.ToTensor()])
     }
 
-    VOC_root = "../../data_set"  # VOCdevkit
+    VOC_root = "../../data"  # VOCdevkit
     aspect_ratio_group_factor = 3
     batch_size = 8
     batch_size = 2

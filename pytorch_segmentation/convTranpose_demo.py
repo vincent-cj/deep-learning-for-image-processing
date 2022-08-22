@@ -32,6 +32,7 @@ K = torch.tensor([[0.0, 1.0], [2.0, 3.0]])
 print(trans_conv(X, K))
 
 
+# 按照快捷运算规则对X进行填充
 temp = torch.zeros(1, 1, 4, 4)
 temp[:, :, 1:3, 1:3] = X
 tconv = nn.Conv2d(1, 1, kernel_size = 2, bias = False)

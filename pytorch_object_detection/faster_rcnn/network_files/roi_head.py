@@ -315,7 +315,7 @@ class RoIHeads(torch.nn.Module):
             labels = labels[:, 1:]
 
             # batch everything, by making every class prediction be a separate instance
-            boxes = boxes.reshape(-1, 4)
+            boxes = boxes.reshape(-1, 4)    # 1000 boxes with 20 cls for each, view as 20000 boxes
             scores = scores.reshape(-1)
             labels = labels.reshape(-1)
 
@@ -332,7 +332,7 @@ class RoIHeads(torch.nn.Module):
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
             # non-maximun suppression, independently done per class
-            # 执行nms处理，执行后的结果会按照scores从大到小进行排序返回
+            # 执行nms处理，执行后的结果会按照scores从大到小进行排序返回, nms ops will remove same boxes with diff cls
             keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
 
             # keep only topk scoring predictions
