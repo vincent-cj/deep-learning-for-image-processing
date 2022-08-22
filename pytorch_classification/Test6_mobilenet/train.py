@@ -78,7 +78,7 @@ def main():
     # model_weight_path = "./mobilenet_v2.pth"
     model_weight_path = f"./{net_name}.pth"
     assert os.path.exists(model_weight_path), "file {} dose not exist.".format(model_weight_path)
-    pre_weights = torch.load(model_weight_path, map_location=device)
+    pre_weights = torch.load(model_weight_path, map_location='cpu')
 
     # delete classifier weights
     pre_dict = {k: v for k, v in pre_weights.items() if net.state_dict()[k].numel() == v.numel()}

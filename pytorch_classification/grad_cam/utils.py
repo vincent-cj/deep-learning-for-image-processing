@@ -4,7 +4,7 @@ import numpy as np
 
 class ActivationsAndGradients:
     """ Class for extracting activations and
-    registering gradients from targetted intermediate layers """
+    registering gradients from targeted intermediate layers """
 
     def __init__(self, model, target_layers, reshape_transform):
         self.model = model
@@ -16,7 +16,7 @@ class ActivationsAndGradients:
             self.handles.append(
                 target_layer.register_forward_hook(
                     self.save_activation))
-            # Backward compatability with older pytorch versions:
+            # Backward compatibility with older pytorch versions:
             if hasattr(target_layer, 'register_full_backward_hook'):
                 self.handles.append(
                     target_layer.register_full_backward_hook(
@@ -70,7 +70,7 @@ class GradCAM:
 
     @staticmethod
     def get_cam_weights(grads):
-        return np.mean(grads, axis=(2, 3))
+        return np.mean(grads, axis=(2, 3), keepdims=True)
 
     @staticmethod
     def get_loss(output, target_category):
@@ -81,7 +81,7 @@ class GradCAM:
 
     def get_cam_image(self, activations, grads):
         weights = self.get_cam_weights(grads)
-        weighted_activations = weights[:, :, None, None] * activations
+        weighted_activations = weights * activations
         cam = weighted_activations.sum(axis=1)
 
         return cam

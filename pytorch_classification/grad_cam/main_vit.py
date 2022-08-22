@@ -17,6 +17,7 @@ class ReshapeTransform:
 
     def __call__(self, x):
         # remove cls token and reshape
+        # [batch_size, num_tokens, token_dim]
         result = x[:, 1:, :].reshape(x.size(0),
                                      self.h,
                                      self.w,
@@ -24,7 +25,8 @@ class ReshapeTransform:
 
         # Bring the channels to the first dimension,
         # like in CNNs.
-        result = result.transpose(2, 3).transpose(1, 2)
+        # [batch_size, H, W, C] -> [batch, C, H, W]
+        result = result.permute(0, 3, 1, 2)
         return result
 
 
@@ -47,9 +49,10 @@ def main():
     img = Image.open(img_path).convert('RGB')
     img = np.array(img, dtype=np.uint8)
     img = center_crop_img(img, 224)
-    # [N, C, H, W]
+    # [C, H, W]
     img_tensor = data_transform(img)
     # expand batch dimension
+    # [C, H, W] -> [N, C, H, W]
     input_tensor = torch.unsqueeze(img_tensor, dim=0)
 
     cam = GradCAM(model=model,

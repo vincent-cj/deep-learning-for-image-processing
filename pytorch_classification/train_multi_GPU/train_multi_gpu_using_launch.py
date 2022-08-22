@@ -28,6 +28,7 @@ def main(args):
     batch_size = args.batch_size
     weights_path = args.weights
     args.lr *= args.world_size  # 学习率要根据并行GPU的数量进行倍增
+    checkpoint_path = ""
 
     if rank == 0:  # 在第一个进程中打印信息，并实例化tensorboard
         print(args)
@@ -172,7 +173,7 @@ if __name__ == '__main__':
     parser.add_argument('--syncBN', type=bool, default=True)
 
     # 数据集所在根目录
-    # http://download.tensorflow.org/example_images/flower_photos.tgz
+    # https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
     parser.add_argument('--data-path', type=str, default="/home/wz/data_set/flower_data/flower_photos")
 
     # resnet34 官方权重下载地址
