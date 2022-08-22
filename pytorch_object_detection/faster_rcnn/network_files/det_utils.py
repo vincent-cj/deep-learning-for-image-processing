@@ -90,6 +90,7 @@ def encode_boxes(reference_boxes, proposals, weights):
     """
     Encode a set of proposals with respect to some reference boxes
     reference_boxes: (x_gmin, y_gmin, x_gmax, y_gmax)，计算 (x_gc, y_gc, h_g, w_g)
+                根据GT的左上、右下坐标，和anchor的宽高、中心点坐标，计算目标回归参数
     proposals: (x_pmin, y_pmin, x_pmax, y_pmax)，计算 (x_pc, y_pc, h_p, w_p)
     通过两组坐标、高度值，计算得到修正系数
 
@@ -376,6 +377,7 @@ class Matcher(object):
         # gt_pred_pairs_of_highest_quality = torch.nonzero(
         #     match_quality_matrix == highest_quality_foreach_gt[:, None]
         # )
+        # 两个元素，第一个元素为所有为True元素所在的行，第二个元素为所有为True的元素所在的列
         gt_pred_pairs_of_highest_quality = torch.where(
             torch.eq(match_quality_matrix, highest_quality_foreach_gt[:, None])
         )
@@ -399,7 +401,7 @@ class Matcher(object):
         # 保留该anchor匹配gt最大iou的索引，即使iou低于设定的阈值
         matches[pre_inds_to_update] = all_matches[pre_inds_to_update]
         # 需要的是每个gt boxes寻找与其iou最大的anchor，而all_matcher存储的是对每个anchor寻找到的与其iou最大的gt boxes,两者不一定对等.
-        # 比如第n个anchor与i的iou最大，但是第j个gt并没有iou值大于0.7的anchor，其对应的产生最大iou的anchor恰好包含n
+        # 比如第n个anchor与第i个gt的iou最大，但是第j个gt并没有iou值大于0.7的anchor，其对应的产生最大iou的anchor恰好包含n
         # 那么按照上面分赋值方式，第n个anchor指向的仍然是i，而非j
         # matches[pre_inds_to_update] = gt_pred_pairs_of_highest_quality[0]
 

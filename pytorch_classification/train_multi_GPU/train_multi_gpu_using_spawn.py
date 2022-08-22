@@ -46,7 +46,6 @@ def main_fun(rank, world_size, args):
     batch_size = args.batch_size
     weights_path = args.weights
     args.lr *= args.world_size  # 学习率要根据并行GPU的数量进行倍增
-    checkpoint_path = ""
 
     if rank == 0:  # 在第一个进程中打印信息，并实例化tensorboard
         print(args)
@@ -192,8 +191,10 @@ if __name__ == '__main__':
     parser.add_argument('--syncBN', type=bool, default=True)
 
     # 数据集所在根目录
-    # https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
-    parser.add_argument('--data-path', type=str, default="/home/wz/data_set/flower_data/flower_photos")
+    # http://download.tensorflow.org/example_images/flower_photos.tgz
+    # parser.add_argument('--data-path', type=str, default="/home/wz/data_set/flower_data/flower_photos")
+    parser.add_argument('--data-path', type=str, default = '/home/user/Volume/a/Projects/CV/'
+                                                           'deep-learning-for-image-processing/data_set/flower_data/flower_photos')
 
     # resnet34 官方权重下载地址
     # https://download.pytorch.org/models/resnet34-333f7ec4.pth
@@ -203,7 +204,7 @@ if __name__ == '__main__':
     # 不要改该参数，系统会自动分配
     parser.add_argument('--device', default='cuda', help='device id (i.e. 0 or 0,1 or cpu)')
     # 开启的进程数(注意不是线程),在单机中指使用GPU的数量
-    parser.add_argument('--world-size', default=4, type=int,
+    parser.add_argument('--world-size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
     opt = parser.parse_args()
