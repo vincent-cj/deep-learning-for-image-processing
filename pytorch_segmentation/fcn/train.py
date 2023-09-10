@@ -74,7 +74,7 @@ def main(args):
     batch_size = args.batch_size
     # segmentation nun_classes + background
     num_classes = args.num_classes + 1
-
+    model = create_model(aux=args.aux, num_classes=num_classes, pretrain = False)
     # 用来保存训练以及验证过程中信息
     results_file = "results{}.txt".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 

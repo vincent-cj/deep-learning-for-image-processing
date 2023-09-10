@@ -96,3 +96,7 @@ class UNet(nn.Module):
         logits = self.out_conv(x)
 
         return {"out": logits}
+
+
+if __name__ == '__main__':
+    model = UNet()

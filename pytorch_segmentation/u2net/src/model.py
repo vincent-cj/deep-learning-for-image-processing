@@ -1,4 +1,5 @@
 from typing import Union, List
+from sympy import im
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -224,12 +225,24 @@ def convert_onnx(m, save_path):
                       opset_version=11)
 
 
+def cal_total_params(model):
+    from functools import reduce
+    params = [p.shape for p in model.parameters()]
+    params = [reduce(lambda a, b: a*b, i) if isinstance(i, torch.Size) else i for i in params]
+    print(f'==> total params : {sum(params)}')
+
+
 if __name__ == '__main__':
     # n_m = RSU(height=7, in_ch=3, mid_ch=12, out_ch=3)
     # convert_onnx(n_m, "RSU7.onnx")
     #
     # n_m = RSU4F(in_ch=3, mid_ch=12, out_ch=3)
     # convert_onnx(n_m, "RSU4F.onnx")
+    u2net_lite = u2net_lite()
+    cal_total_params(u2net_lite)
+    del u2net_lite
 
     u2net = u2net_full()
-    convert_onnx(u2net, "u2net_full.onnx")
+    # convert_onnx(u2net, "u2net_full.onnx")
+    cal_total_params(u2net)
+    del u2net

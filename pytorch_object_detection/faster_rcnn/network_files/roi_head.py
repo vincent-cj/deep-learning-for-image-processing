@@ -172,6 +172,10 @@ class RoIHeads(torch.nn.Module):
         # type: (List[Tensor], List[Tensor]) -> List[Tensor]
         """
         将gt_boxes拼接到proposal后面
+        作用：从box_feature到TwoMLHead,再到box_predicter，在训练初始时效果不好，如果RPN给出的proposals中没有与gt的IOU大于阈值，
+        即没有正样本时，后续关于正样本的损失即为0，特别是特征框回归器则无法得到训练，因此在训练时，将gt的边界框加入到RPN给出的proposals中，
+        可帮助训练TwoMLHead和box_predicter；由于在proposals中添加gt，也是会通过映射到box_feature中，从而加入到梯度图中，
+        再box_feature输入到RIO中，因此对RIO而言，无论其是否是RPN产生的都没关系
         Args:
             proposals: 一个batch中每张图像rpn预测的boxes
             gt_boxes:  一个batch中每张图像对应的真实目标边界框
